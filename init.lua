@@ -172,6 +172,40 @@ do
   -- See `:help 'confirm'`
   vim.o.confirm = true
 
+  -- configure default tab behavior
+  vim.opt.expandtab = true
+  vim.opt.tabstop = 2
+  vim.opt.shiftwidth = 2
+  vim.opt.softtabstop = 2
+
+  -- configure language-specific tab behavior
+  local function set_indent(opts)
+    vim.bo.expandtab = opts.expandtab
+    vim.bo.tabstop = opts.tabstop
+    vim.bo.shiftwidth = opts.shiftwidth
+    vim.bo.softtabstop = opts.softtabstop or opts.shiftwidth
+  end
+
+  vim.api.nvim_create_autocmd('FileType', {
+    pattern = 'python',
+    callback = function()
+      set_indent { expandtab = true, tabstop = 4, shiftwidth = 4 }
+    end,
+  })
+
+  vim.api.nvim_create_autocmd('FileType', {
+    pattern = {
+      'make',
+      'go',
+      'gomod',
+      'gosum',
+      'gowork',
+    },
+    callback = function()
+      set_indent { expandtab = false, tabstop = 2, shiftwidth = 2, softtabstop = 0 }
+    end,
+  })
+
   -- [[ Basic Keymaps ]]
   --  See `:help vim.keymap.set()`
 
@@ -386,6 +420,7 @@ do
   vim.pack.add { gh 'folke/tokyonight.nvim' }
   ---@diagnostic disable-next-line: missing-fields
   require('tokyonight').setup {
+    transparent = true,
     styles = {
       comments = { italic = false }, -- Disable italics in comments
     },
@@ -395,6 +430,14 @@ do
   -- Like many other themes, this one has different styles, and you could load
   -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
   vim.cmd.colorscheme 'tokyonight-night'
+
+  -- prefer transparent backgrounds
+  vim.api.nvim_create_autocmd('ColorScheme', {
+    callback = function()
+        vim.api.nvim_set_hl(0, 'Normal', { bg = 'none' })
+        vim.api.nvim_set_hl(0, 'NormalFloat', { bg = 'none' })
+    end,
+  })
 
   -- Highlight todo, notes, etc in comments
   vim.pack.add { gh 'folke/todo-comments.nvim' }
@@ -441,6 +484,23 @@ do
 
   -- ... and there is more!
   --  Check out: https://github.com/nvim-mini/mini.nvim
+
+
+  -- [[ Additional Plugins ]]
+
+  -- i sometimes like file explorers
+  vim.pack.add {
+    gh 'nvim-neo-tree/neo-tree.nvim',
+    gh 'nvim-lua/plenary.nvim',
+    gh 'MunifTanjim/nui.nvim',
+    gh 'nvim-tree/nvim-web-devicons',
+  }
+  require('neo-tree').setup {}
+
+  vim.keymap.set('n', '<leader>e', '<cmd>Neotree toggle<cr>', {
+    desc = 'Toggle neo-tree'
+  })
+
 end
 
 -- ============================================================
@@ -686,18 +746,23 @@ do
   --  See `:help lsp-config` for information about keys and how to configure
   ---@type table<string, vim.lsp.Config>
   local servers = {
-    -- clangd = {},
-    -- gopls = {},
-    -- pyright = {},
-    -- rust_analyzer = {},
-    --
+    clangd = {},        -- c/c++
+    gopls = {},         -- go
+    ty = {},            -- python
+    rust_analyzer = {}, -- rust
+
     -- Some languages (like typescript) have entire language plugins that can be useful:
     --    https://github.com/pmizio/typescript-tools.nvim
     --
     -- But for many setups, the LSP (`ts_ls`) will work just fine
-    -- ts_ls = {},
+    ts_ls = {},         -- ts/js
 
-    stylua = {}, -- Used to format Lua code
+    stylua = {},        -- lua formatting
+    ocamllsp = {},      -- ocaml
+    -- nixd = {},          -- nix
+    tinymist = {},      -- typst
+    zls = {},           -- zig
+
 
     -- Special Lua Config, as recommended by neovim help docs
     lua_ls = {
