@@ -806,6 +806,17 @@ do
     gh 'WhoIsSethDaniel/mason-tool-installer.nvim',
   }
 
+  local mason_servers = vim.deepcopy(servers)
+
+  for _, name in ipairs({
+    "clangd",
+    "gopls",
+  }) do
+    if vim.fn.executable(name) == 1 then
+      mason_servers[name] = nil
+    end
+  end
+
   -- Automatically install LSPs and related tools to stdpath for Neovim
   require('mason').setup {}
 
@@ -816,11 +827,10 @@ do
   --    :Mason
   --
   -- You can press `g?` for help in this menu.
-  local ensure_installed = vim.tbl_keys(servers or {})
+  local ensure_installed = vim.tbl_keys(mason_servers or {})
   vim.list_extend(ensure_installed, {
     -- You can add other tools here that you want Mason to install
   })
-
   require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
   for name, server in pairs(servers) do
