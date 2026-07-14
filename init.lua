@@ -219,11 +219,16 @@ do
     update_in_insert = false,
     severity_sort = true,
     float = { border = 'rounded', source = 'if_many' },
-    underline = { severity = { min = vim.diagnostic.severity.WARN } },
+    signs = true,
+    -- underline = { severity = { min = vim.diagnostic.severity.WARN } },
+    underline = true,
 
     -- Can switch between these as you prefer
-    virtual_text = true, -- Text shows up at the end of the line
-    virtual_lines = false, -- Text shows up underneath the line, with virtual lines
+
+    -- Text shows up at the end of the line
+    virtual_text = false,
+    -- Text shows up underneath the line, with virtual lines
+    virtual_lines = { current_line = true },
 
     -- Auto open the float, so you can easily read the errors when jumping with `[d` and `]d`
     jump = {
@@ -236,6 +241,8 @@ do
       end,
     },
   }
+
+  vim.keymap.set('n', '<leader>d', vim.diagnostic.open_float, { desc = 'Show line [D]iagnostic' })
 
   vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
 
@@ -736,7 +743,11 @@ do
       --
       -- This may be unwanted, since they displace some of your code
       if client and client:supports_method('textDocument/inlayHint', event.buf) then
-        map('<leader>th', function() vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf }) end, '[T]oggle Inlay [H]ints')
+        map('<leader>th', function()
+          vim.lsp.inlay_hint.enable(
+            not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf }
+          )
+        end, '[T]oggle Inlay [H]ints')
       end
     end,
   })
@@ -749,7 +760,35 @@ do
     clangd = {},        -- c/c++
     gopls = {},         -- go
     ty = {},            -- python
-    rust_analyzer = {}, -- rust
+    rust_analyzer = {
+      settings = {
+        ['rust-analyzer'] = {
+          inlayHints = {
+            -- bindingModeHints = { enable = false },
+            chainingHints = { enable = true },
+            closingBraceHints = { enable = true, minLines = 25 },
+            -- closureReturnTypeHints = { enable = "never" },
+            -- lifetimeElisionHints = { enable = "never", useParameterNames = false },
+            maxLength = 25,
+            parameterHints = { enable = true },
+            -- reborrowHints = { enable = "never" },
+            renderColons = true,
+            typeHints = {
+              enable = true,
+              -- hideClosureInitialization = false,
+              -- hideNamedConstructor = false,
+            },
+          },
+          cargo = {
+            targetDir = true,
+            allFeatures = true,
+            loadOutDirsFromCheck = true,
+            buildScripts = { enable = true },
+          },
+          procMacro = { enable = true },
+        },
+      },
+    },
 
     -- Some languages (like typescript) have entire language plugins that can be useful:
     --    https://github.com/pmizio/typescript-tools.nvim
